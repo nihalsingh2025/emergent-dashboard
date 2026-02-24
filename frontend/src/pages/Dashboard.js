@@ -414,6 +414,11 @@ const Dashboard = () => {
           <MHETable filteredData={filteredData} />
         </div>
 
+        {/* Item Code UOM Table */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <ItemCodeUOMTable filteredData={filteredData} />
+        </div>
+
         {/* Final Inventory Table */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <InventoryTable filteredData={filteredData} />
