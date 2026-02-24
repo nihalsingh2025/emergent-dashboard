@@ -41,7 +41,8 @@ const Dashboard = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [filterOptions, setFilterOptions] = useState({});
   const [filters, setFilters] = useState({
-    captured_date: '',
+    start_date: '',
+    end_date: '',
     item_type: '',
     item_code: '',
     machine_name: '',
@@ -90,17 +91,24 @@ const Dashboard = () => {
   useEffect(() => {
     let filtered = [...inventoryData];
 
-    // Apply panel filters
-    Object.keys(filters).forEach((key) => {
+    // Apply date range filter
+    if (filters.start_date) {
+      filtered = filtered.filter((item) => {
+        const itemDate = item.captured_date_ist?.split('T')[0];
+        return itemDate >= filters.start_date;
+      });
+    }
+    if (filters.end_date) {
+      filtered = filtered.filter((item) => {
+        const itemDate = item.captured_date_ist?.split('T')[0];
+        return itemDate <= filters.end_date;
+      });
+    }
+
+    // Apply other filters
+    ['item_type', 'item_code', 'machine_name', 'machine_id', 'uom', 'quality_status', 'mhe_no'].forEach((key) => {
       if (filters[key]) {
-        const filterKey = key === 'captured_date' ? 'captured_date_ist' : key;
-        filtered = filtered.filter((item) => {
-          const itemValue = item[filterKey];
-          if (key === 'captured_date') {
-            return itemValue?.startsWith(filters[key]);
-          }
-          return itemValue === filters[key];
-        });
+        filtered = filtered.filter((item) => item[key] === filters[key]);
       }
     });
 
@@ -108,18 +116,10 @@ const Dashboard = () => {
     Object.keys(chartFilters).forEach((key) => {
       if (chartFilters[key]) {
         filtered = filtered.filter((item) => {
-          if (key === 'uom') {
-            return item.uom === chartFilters[key];
-          }
-          if (key === 'quality_status') {
-            return item.quality_status === chartFilters[key];
-          }
-          if (key === 'machine_name') {
-            return item.machine_name === chartFilters[key];
-          }
-          if (key === 'item_code') {
-            return item.item_code === chartFilters[key];
-          }
+          if (key === 'uom') return item.uom === chartFilters[key];
+          if (key === 'quality_status') return item.quality_status === chartFilters[key];
+          if (key === 'machine_name') return item.machine_name === chartFilters[key];
+          if (key === 'item_code') return item.item_code === chartFilters[key];
           return true;
         });
       }
@@ -134,7 +134,8 @@ const Dashboard = () => {
 
   const handleClearFilters = () => {
     setFilters({
-      captured_date: '',
+      start_date: '',
+      end_date: '',
       item_type: '',
       item_code: '',
       machine_name: '',
@@ -149,7 +150,6 @@ const Dashboard = () => {
   const handleChartClick = (filterType, value) => {
     setChartFilters((prev) => {
       if (prev[filterType] === value) {
-        // Remove filter if clicking the same value
         const newFilters = { ...prev };
         delete newFilters[filterType];
         return newFilters;
@@ -158,7 +158,7 @@ const Dashboard = () => {
     });
   };
 
-  // Calculate UOM wise inventory for stats cards and pie chart
+  // Calculate UOM wise inventory
   const uomInventory = useMemo(() => {
     const uomMap = {};
     filteredData.forEach((item) => {
@@ -191,12 +191,12 @@ const Dashboard = () => {
     return machineMap;
   }, [filteredData]);
 
-  // Chart 2: Quality Status wise inventory (Horizontal Bar)
+  // Chart configurations
   const qualityStatusChartData = {
     labels: Object.keys(qualityStatusInventory),
     datasets: [
       {
-        label: 'Inventory (Current Quantity)',
+        label: 'Inventory',
         data: Object.values(qualityStatusInventory),
         backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6'],
       },
@@ -215,46 +215,23 @@ const Dashboard = () => {
       }
     },
     plugins: {
-      legend: {
-        display: false,
-      },
+      legend: { display: false },
       title: {
         display: true,
         text: 'Quality Status Wise Inventory',
-        font: { size: 16, weight: 'bold', family: 'Work Sans' },
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context) {
-            return `Inventory: ${context.parsed.x.toFixed(2)}`;
-          },
-        },
+        font: { size: 14, weight: 'bold', family: 'Work Sans' },
       },
     },
-    scales: {
-      x: {
-        beginAtZero: true,
-      },
-    },
+    scales: { x: { beginAtZero: true } },
   };
 
-  // Chart 3: Machine name wise inventory (Pie)
   const machineChartData = {
     labels: Object.keys(machineInventory),
     datasets: [
       {
         label: 'Inventory',
         data: Object.values(machineInventory),
-        backgroundColor: [
-          '#3b82f6',
-          '#10b981',
-          '#f59e0b',
-          '#ef4444',
-          '#8b5cf6',
-          '#ec4899',
-          '#14b8a6',
-          '#f97316',
-        ],
+        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'],
       },
     ],
   };
@@ -272,29 +249,16 @@ const Dashboard = () => {
     plugins: {
       legend: {
         position: 'right',
-        labels: {
-          font: { size: 11, family: 'Work Sans' },
-          boxWidth: 12,
-        },
+        labels: { font: { size: 10, family: 'Work Sans' }, boxWidth: 10 },
       },
       title: {
         display: true,
         text: 'Machine Wise Inventory',
-        font: { size: 16, weight: 'bold', family: 'Work Sans' },
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context) {
-            const label = context.label || '';
-            const value = context.parsed || 0;
-            return `${label}: ${value.toFixed(2)}`;
-          },
-        },
+        font: { size: 14, weight: 'bold', family: 'Work Sans' },
       },
     },
   };
 
-  // Chart 4: UOM wise inventory (Pie)
   const uomPieChartData = {
     labels: Object.keys(uomInventory),
     datasets: [
@@ -319,24 +283,12 @@ const Dashboard = () => {
     plugins: {
       legend: {
         position: 'right',
-        labels: {
-          font: { size: 12, family: 'Work Sans' },
-          boxWidth: 15,
-        },
+        labels: { font: { size: 11, family: 'Work Sans' }, boxWidth: 12 },
       },
       title: {
         display: true,
-        text: 'UOM Wise Inventory Distribution',
-        font: { size: 16, weight: 'bold', family: 'Work Sans' },
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context) {
-            const label = context.label || '';
-            const value = context.parsed || 0;
-            return `${label}: ${value.toFixed(2)}`;
-          },
-        },
+        text: 'UOM Wise Inventory',
+        font: { size: 14, weight: 'bold', family: 'Work Sans' },
       },
     },
   };
@@ -355,14 +307,14 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-[#FFD700] py-4 px-6 shadow-md">
-        <h1 className="text-3xl font-bold text-black text-center">
+      <div className="bg-[#FFD700] py-3 px-6 shadow-md">
+        <h1 className="text-2xl font-bold text-black text-center">
           JK Tyre BTP Inventory Dashboard
         </h1>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[1800px] mx-auto p-6 space-y-6">
+      <div className="max-w-[1800px] mx-auto p-4 space-y-4">
         {/* Filter Panel */}
         <FilterPanel
           filters={filters}
@@ -376,51 +328,51 @@ const Dashboard = () => {
         <StatsCards uomInventory={uomInventory} totalRecords={filteredData.length} />
 
         {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Quality Status Chart */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div style={{ height: '350px' }}>
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <div style={{ height: '280px' }}>
               <Bar data={qualityStatusChartData} options={qualityStatusChartOptions} />
             </div>
           </div>
 
           {/* Machine Wise Inventory */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div style={{ height: '350px' }}>
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <div style={{ height: '280px' }}>
               <Pie data={machineChartData} options={machineChartOptions} />
             </div>
           </div>
 
           {/* UOM Pie Chart */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div style={{ height: '350px' }}>
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <div style={{ height: '280px' }}>
               <Pie data={uomPieChartData} options={uomPieChartOptions} />
             </div>
           </div>
 
           {/* Date Wise Inventory */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg shadow-md p-4">
             <DateInventoryChart filteredData={filteredData} />
           </div>
         </div>
 
         {/* Item Code Stacked Bar Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4">
           <ItemCodeTable filteredData={filteredData} onChartClick={handleChartClick} />
         </div>
 
-        {/* MHE Table */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <MHETable filteredData={filteredData} />
-        </div>
-
-        {/* Item Code UOM Table */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <ItemCodeUOMTable filteredData={filteredData} />
+        {/* Side by Side Tables */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <MHETable filteredData={filteredData} />
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <ItemCodeUOMTable filteredData={filteredData} />
+          </div>
         </div>
 
         {/* Final Inventory Table */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4">
           <InventoryTable filteredData={filteredData} />
         </div>
       </div>

@@ -9,7 +9,6 @@ const DateInventoryChart = ({ filteredData }) => {
       const qty = parseFloat(item.current_quantity) || 0;
       dateMap[date] = (dateMap[date] || 0) + qty;
     });
-    // Sort by date
     const sortedDates = Object.keys(dateMap).sort();
     return {
       labels: sortedDates,
@@ -35,31 +34,18 @@ const DateInventoryChart = ({ filteredData }) => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false,
-      },
+      legend: { display: false },
       title: {
         display: true,
         text: 'Date Wise Inventory',
-        font: { size: 16, weight: 'bold', family: 'Work Sans' },
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context) {
-            return `Inventory: ${context.parsed.y.toFixed(2)}`;
-          },
-        },
+        font: { size: 14, weight: 'bold', family: 'Work Sans' },
       },
     },
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
+    scales: { y: { beginAtZero: true } },
   };
 
   return (
-    <div style={{ height: '350px' }}>
+    <div style={{ height: '280px' }}>
       <Line data={chartData} options={chartOptions} />
     </div>
   );

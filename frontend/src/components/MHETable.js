@@ -33,24 +33,24 @@ const MHETable = ({ filteredData }) => {
 
   return (
     <div data-testid="mhe-table">
-      <h3 className="text-lg font-bold text-gray-800 mb-4">MHE Table</h3>
-      <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+      <h3 className="text-base font-bold text-gray-800 mb-3">MHE Table</h3>
+      <div className="overflow-x-auto max-h-[350px] overflow-y-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="font-bold">Item Type</TableHead>
-              <TableHead className="font-bold">UOM</TableHead>
-              <TableHead className="font-bold text-right">Distinct MHE Count</TableHead>
-              <TableHead className="font-bold text-right">Inventory</TableHead>
+              <TableHead className="font-bold text-xs">Item Type</TableHead>
+              <TableHead className="font-bold text-xs">UOM</TableHead>
+              <TableHead className="font-bold text-xs text-right">MHE Count</TableHead>
+              <TableHead className="font-bold text-xs text-right">Inventory</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {mheData.map((row, index) => (
               <TableRow key={index}>
-                <TableCell className="font-medium">{row.itemType}</TableCell>
-                <TableCell>{row.uom}</TableCell>
-                <TableCell className="text-right">{row.mheCount}</TableCell>
-                <TableCell className="text-right">{row.inventory.toFixed(2)}</TableCell>
+                <TableCell className="font-medium text-xs">{row.itemType}</TableCell>
+                <TableCell className="text-xs">{row.uom}</TableCell>
+                <TableCell className="text-right text-xs">{row.mheCount}</TableCell>
+                <TableCell className="text-right text-xs">{row.inventory.toFixed(2)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
