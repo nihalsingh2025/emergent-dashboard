@@ -17,6 +17,7 @@ import FilterPanel from '@/components/FilterPanel';
 import StatsCards from '@/components/StatsCards';
 import MHETable from '@/components/MHETable';
 import ItemCodeTable from '@/components/ItemCodeTable';
+import ItemCodeUOMTable from '@/components/ItemCodeUOMTable';
 import InventoryTable from '@/components/InventoryTable';
 import DateInventoryChart from '@/components/DateInventoryChart';
 
