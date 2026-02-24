@@ -48,7 +48,7 @@ const DateInventoryChart = ({ filteredData }) => {
       },
       title: {
         display: true,
-        text: 'Date Wise Inventory (Stacked by UOM) - 2026 Only',
+        text: 'Date Wise Inventory (Stacked by UOM)',
         font: { size: 14, weight: 'bold', family: 'Work Sans' },
       },
     },
