@@ -92,15 +92,15 @@ async def get_inventory(
     try:
         connection = get_mysql_connection()
         with connection.cursor() as cursor:
-            # Base query with JOIN to MasterMachine
+            # Base query with JOIN to MasterMachines
             query = """
                 SELECT 
                     i.id,
                     i.section,
                     i.machineId as machine_id,
-                    m.name as machine_name,
-                    m.displayName as machine_display_name,
-                    m.displayId as machine_display_id,
+                    m.machineDisplayName as machine_name,
+                    m.machineDisplayName as machine_display_name,
+                    m.machineDisplayId as machine_display_id,
                     i.shift,
                     i.itemCode as item_code,
                     i.lotNo as lot_no,
@@ -110,15 +110,15 @@ async def get_inventory(
                     i.currentQuantity as current_quantity,
                     i.uom,
                     i.qualityStatus as quality_status,
-                    i.capturedDate as captured_date,
-                    DATE_ADD(i.capturedDate, INTERVAL 330 MINUTE) as captured_date_ist,
-                    i.dateOfProduction as date_of_production,
-                    i.timeOfProduction as time_of_production,
+                    i.date as captured_date,
+                    DATE_ADD(i.date, INTERVAL 330 MINUTE) as captured_date_ist,
+                    DATE(i.productionTime) as date_of_production,
+                    TIME(i.productionTime) as time_of_production,
                     i.useAfter as use_after,
                     i.useBefore as use_before
                 FROM Inventory i
-                LEFT JOIN MasterMachine m ON i.machineId = m.id
-                WHERE YEAR(i.capturedDate) = 2026
+                LEFT JOIN MasterMachines m ON i.machineId = m.id
+                WHERE YEAR(i.date) = 2026
             """
             
             # Add filters dynamically
@@ -126,7 +126,7 @@ async def get_inventory(
             params = []
             
             if captured_date:
-                conditions.append("DATE(DATE_ADD(i.capturedDate, INTERVAL 330 MINUTE)) = %s")
+                conditions.append("DATE(DATE_ADD(i.date, INTERVAL 330 MINUTE)) = %s")
                 params.append(captured_date)
             
             if item_type:
@@ -138,11 +138,11 @@ async def get_inventory(
                 params.append(item_code)
             
             if machine_name:
-                conditions.append("m.name = %s")
+                conditions.append("m.machineDisplayName = %s")
                 params.append(machine_name)
             
             if machine_id:
-                conditions.append("i.machineId = %s")
+                conditions.append("m.machineDisplayId = %s")
                 params.append(machine_id)
             
             if uom:
@@ -160,7 +160,7 @@ async def get_inventory(
             if conditions:
                 query += " AND " + " AND ".join(conditions)
             
-            query += " ORDER BY i.capturedDate DESC LIMIT 10000"
+            query += " ORDER BY i.date DESC LIMIT 10000"
             
             cursor.execute(query, params)
             result = cursor.fetchall()
@@ -170,6 +170,8 @@ async def get_inventory(
                 for key, value in row.items():
                     if isinstance(value, datetime):
                         row[key] = value.isoformat()
+                    elif isinstance(value, timedelta):
+                        row[key] = str(value)
             
             return result
     
