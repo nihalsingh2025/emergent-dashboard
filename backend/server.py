@@ -160,7 +160,7 @@ async def get_inventory(
             if conditions:
                 query += " AND " + " AND ".join(conditions)
             
-            query += " ORDER BY i.date DESC LIMIT 10000"
+            query += " ORDER BY i.createdAt DESC LIMIT 10000"
             
             cursor.execute(query, params)
             result = cursor.fetchall()
