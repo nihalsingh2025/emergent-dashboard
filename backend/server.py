@@ -92,7 +92,7 @@ async def get_inventory(
     try:
         connection = get_mysql_connection()
         with connection.cursor() as cursor:
-            # Base query with JOIN to MasterMachines - Using createdAt for year filtering
+            # Base query with JOIN to MasterMachines - Using createdAt as main date column
             query = """
                 SELECT 
                     i.id,
@@ -110,8 +110,8 @@ async def get_inventory(
                     i.currentQuantity as current_quantity,
                     i.uom,
                     i.qualityStatus as quality_status,
-                    i.date as captured_date,
-                    DATE_ADD(i.date, INTERVAL 330 MINUTE) as captured_date_ist,
+                    i.createdAt as captured_date,
+                    DATE_ADD(i.createdAt, INTERVAL 330 MINUTE) as captured_date_ist,
                     DATE(i.productionTime) as date_of_production,
                     TIME(i.productionTime) as time_of_production,
                     i.useAfter as use_after,
