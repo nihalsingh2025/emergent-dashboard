@@ -5,10 +5,10 @@ const DateInventoryChart = ({ filteredData }) => {
   const dateInventory = useMemo(() => {
     const dateMap = {};
     
-    // Filter only 2026 dates and group by date and UOM
+    // Group by date and UOM
     filteredData.forEach((item) => {
       const dateStr = item.captured_date_ist?.split('T')[0];
-      if (!dateStr || !dateStr.startsWith('2026')) return; // Only 2026 dates
+      if (!dateStr) return;
       
       const uom = item.uom || 'Unknown';
       const qty = parseFloat(item.current_quantity) || 0;
