@@ -39,12 +39,12 @@ const FilterPanel = ({ filters, filterOptions, onFilterChange, onClearFilters, a
         {/* Captured Date */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Captured Date (IST)</label>
-          <Select value={filters.captured_date} onValueChange={(value) => onFilterChange('captured_date', value)}>
+          <Select value={filters.captured_date} onValueChange={(value) => onFilterChange('captured_date', value === '_all_' ? '' : value)}>
             <SelectTrigger data-testid="filter-captured-date">
               <SelectValue placeholder="Select date" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Dates</SelectItem>
+              <SelectItem value="_all_">All Dates</SelectItem>
               {filterOptions.captured_dates?.map((date) => (
                 <SelectItem key={date} value={date}>
                   {date}
@@ -57,12 +57,12 @@ const FilterPanel = ({ filters, filterOptions, onFilterChange, onClearFilters, a
         {/* Item Type */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Item Type</label>
-          <Select value={filters.item_type} onValueChange={(value) => onFilterChange('item_type', value)}>
+          <Select value={filters.item_type} onValueChange={(value) => onFilterChange('item_type', value === '_all_' ? '' : value)}>
             <SelectTrigger data-testid="filter-item-type">
               <SelectValue placeholder="Select item type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="_all_">All Types</SelectItem>
               {filterOptions.item_types?.map((type) => (
                 <SelectItem key={type} value={type}>
                   {type}
@@ -75,12 +75,12 @@ const FilterPanel = ({ filters, filterOptions, onFilterChange, onClearFilters, a
         {/* Item Code */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Item Code</label>
-          <Select value={filters.item_code} onValueChange={(value) => onFilterChange('item_code', value)}>
+          <Select value={filters.item_code} onValueChange={(value) => onFilterChange('item_code', value === '_all_' ? '' : value)}>
             <SelectTrigger data-testid="filter-item-code">
               <SelectValue placeholder="Select item code" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Codes</SelectItem>
+              <SelectItem value="_all_">All Codes</SelectItem>
               {filterOptions.item_codes?.map((code) => (
                 <SelectItem key={code} value={code}>
                   {code}
@@ -93,12 +93,12 @@ const FilterPanel = ({ filters, filterOptions, onFilterChange, onClearFilters, a
         {/* Machine Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Machine Name</label>
-          <Select value={filters.machine_name} onValueChange={(value) => onFilterChange('machine_name', value)}>
+          <Select value={filters.machine_name} onValueChange={(value) => onFilterChange('machine_name', value === '_all_' ? '' : value)}>
             <SelectTrigger data-testid="filter-machine-name">
               <SelectValue placeholder="Select machine" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Machines</SelectItem>
+              <SelectItem value="_all_">All Machines</SelectItem>
               {filterOptions.machine_names?.map((name) => (
                 <SelectItem key={name} value={name}>
                   {name}
@@ -111,12 +111,12 @@ const FilterPanel = ({ filters, filterOptions, onFilterChange, onClearFilters, a
         {/* Machine ID */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Machine No.</label>
-          <Select value={filters.machine_id} onValueChange={(value) => onFilterChange('machine_id', value)}>
+          <Select value={filters.machine_id} onValueChange={(value) => onFilterChange('machine_id', value === '_all_' ? '' : value)}>
             <SelectTrigger data-testid="filter-machine-id">
               <SelectValue placeholder="Select machine no." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Machine Nos.</SelectItem>
+              <SelectItem value="_all_">All Machine Nos.</SelectItem>
               {filterOptions.machine_ids?.map((id) => (
                 <SelectItem key={id} value={id}>
                   {id}
@@ -129,12 +129,12 @@ const FilterPanel = ({ filters, filterOptions, onFilterChange, onClearFilters, a
         {/* UOM */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">UOM</label>
-          <Select value={filters.uom} onValueChange={(value) => onFilterChange('uom', value)}>
+          <Select value={filters.uom} onValueChange={(value) => onFilterChange('uom', value === '_all_' ? '' : value)}>
             <SelectTrigger data-testid="filter-uom">
               <SelectValue placeholder="Select UOM" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All UOMs</SelectItem>
+              <SelectItem value="_all_">All UOMs</SelectItem>
               {filterOptions.uoms?.map((uom) => (
                 <SelectItem key={uom} value={uom}>
                   {uom}
@@ -147,12 +147,12 @@ const FilterPanel = ({ filters, filterOptions, onFilterChange, onClearFilters, a
         {/* Quality Status */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Quality Status</label>
-          <Select value={filters.quality_status} onValueChange={(value) => onFilterChange('quality_status', value)}>
+          <Select value={filters.quality_status} onValueChange={(value) => onFilterChange('quality_status', value === '_all_' ? '' : value)}>
             <SelectTrigger data-testid="filter-quality-status">
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="_all_">All Statuses</SelectItem>
               {filterOptions.quality_statuses?.map((status) => (
                 <SelectItem key={status} value={status}>
                   {status}
@@ -165,12 +165,12 @@ const FilterPanel = ({ filters, filterOptions, onFilterChange, onClearFilters, a
         {/* MHE No. */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">MHE No.</label>
-          <Select value={filters.mhe_no} onValueChange={(value) => onFilterChange('mhe_no', value)}>
+          <Select value={filters.mhe_no} onValueChange={(value) => onFilterChange('mhe_no', value === '_all_' ? '' : value)}>
             <SelectTrigger data-testid="filter-mhe-no">
               <SelectValue placeholder="Select MHE no." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All MHE Nos.</SelectItem>
+              <SelectItem value="_all_">All MHE Nos.</SelectItem>
               {filterOptions.mhe_nos?.map((mhe) => (
                 <SelectItem key={mhe} value={mhe}>
                   {mhe}
