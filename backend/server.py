@@ -212,11 +212,11 @@ async def get_filter_options():
             # Get unique values for each filter
             filter_data = {}
             
-            # Captured dates (IST)
+            # Captured dates (IST) - using createdAt column
             cursor.execute("""
-                SELECT DISTINCT DATE(DATE_ADD(date, INTERVAL 330 MINUTE)) as date_ist
+                SELECT DISTINCT DATE(DATE_ADD(createdAt, INTERVAL 330 MINUTE)) as date_ist
                 FROM Inventory
-                WHERE YEAR(createdAt) = 2026 AND date IS NOT NULL
+                WHERE YEAR(createdAt) = 2026 AND createdAt IS NOT NULL
                 ORDER BY date_ist DESC
                 LIMIT 100
             """)
