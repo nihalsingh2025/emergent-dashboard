@@ -168,10 +168,10 @@ async def get_inventory(
             # Convert datetime objects to strings
             for row in result:
                 for key, value in row.items():
-                    if isinstance(value, datetime):
+                    if isinstance(value, (datetime, timedelta)):
+                        row[key] = value.isoformat() if isinstance(value, datetime) else str(value)
+                    elif hasattr(value, 'isoformat'):  # This will catch date objects
                         row[key] = value.isoformat()
-                    elif isinstance(value, timedelta):
-                        row[key] = str(value)
             
             return result
     
