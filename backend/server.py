@@ -165,8 +165,27 @@ async def get_inventory(
             cursor.execute(query, params)
             result = cursor.fetchall()
             
-            # Convert datetime objects to strings
+            # Normalize quality status to proper case
+            quality_status_mapping = {
+                'ready to use': 'Ready To Use',
+                'consumed': 'Consumed',
+                'consumed1': 'Consumed1',
+                'decision pending': 'Decision Pending',
+                'ncmhold': 'NCMHold',
+                'hold': 'Hold'
+            }
+            
+            # Convert datetime objects to strings and normalize quality status
             for row in result:
+                # Normalize quality status
+                if row.get('quality_status'):
+                    normalized = quality_status_mapping.get(
+                        row['quality_status'].lower(), 
+                        row['quality_status']
+                    )
+                    row['quality_status'] = normalized
+                
+                # Convert date/time objects to strings
                 for key, value in row.items():
                     if isinstance(value, (datetime, timedelta)):
                         row[key] = value.isoformat() if isinstance(value, datetime) else str(value)
