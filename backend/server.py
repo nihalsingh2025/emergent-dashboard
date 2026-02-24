@@ -195,9 +195,9 @@ async def get_filter_options():
             
             # Captured dates (IST)
             cursor.execute("""
-                SELECT DISTINCT DATE(DATE_ADD(capturedDate, INTERVAL 330 MINUTE)) as date_ist
+                SELECT DISTINCT DATE(DATE_ADD(date, INTERVAL 330 MINUTE)) as date_ist
                 FROM Inventory
-                WHERE YEAR(capturedDate) = 2026 AND capturedDate IS NOT NULL
+                WHERE YEAR(date) = 2026 AND date IS NOT NULL
                 ORDER BY date_ist DESC
                 LIMIT 100
             """)
@@ -208,7 +208,7 @@ async def get_filter_options():
             cursor.execute("""
                 SELECT DISTINCT itemType
                 FROM Inventory
-                WHERE YEAR(capturedDate) = 2026 AND itemType IS NOT NULL
+                WHERE YEAR(date) = 2026 AND itemType IS NOT NULL
                 ORDER BY itemType
             """)
             filter_data['item_types'] = [row['itemType'] for row in cursor.fetchall() if row['itemType']]
@@ -217,7 +217,7 @@ async def get_filter_options():
             cursor.execute("""
                 SELECT DISTINCT itemCode
                 FROM Inventory
-                WHERE YEAR(capturedDate) = 2026 AND itemCode IS NOT NULL
+                WHERE YEAR(date) = 2026 AND itemCode IS NOT NULL
                 ORDER BY itemCode
                 LIMIT 200
             """)
@@ -225,29 +225,29 @@ async def get_filter_options():
             
             # Machine names
             cursor.execute("""
-                SELECT DISTINCT m.name
+                SELECT DISTINCT m.machineDisplayName
                 FROM Inventory i
-                LEFT JOIN MasterMachine m ON i.machineId = m.id
-                WHERE YEAR(i.capturedDate) = 2026 AND m.name IS NOT NULL
-                ORDER BY m.name
+                LEFT JOIN MasterMachines m ON i.machineId = m.id
+                WHERE YEAR(i.date) = 2026 AND m.machineDisplayName IS NOT NULL
+                ORDER BY m.machineDisplayName
             """)
-            filter_data['machine_names'] = [row['name'] for row in cursor.fetchall() if row['name']]
+            filter_data['machine_names'] = [row['machineDisplayName'] for row in cursor.fetchall() if row['machineDisplayName']]
             
             # Machine IDs
             cursor.execute("""
-                SELECT DISTINCT m.displayId
+                SELECT DISTINCT m.machineDisplayId
                 FROM Inventory i
-                LEFT JOIN MasterMachine m ON i.machineId = m.id
-                WHERE YEAR(i.capturedDate) = 2026 AND m.displayId IS NOT NULL
-                ORDER BY m.displayId
+                LEFT JOIN MasterMachines m ON i.machineId = m.id
+                WHERE YEAR(i.date) = 2026 AND m.machineDisplayId IS NOT NULL
+                ORDER BY m.machineDisplayId
             """)
-            filter_data['machine_ids'] = [row['displayId'] for row in cursor.fetchall() if row['displayId']]
+            filter_data['machine_ids'] = [row['machineDisplayId'] for row in cursor.fetchall() if row['machineDisplayId']]
             
             # UOMs
             cursor.execute("""
                 SELECT DISTINCT uom
                 FROM Inventory
-                WHERE YEAR(capturedDate) = 2026 AND uom IS NOT NULL
+                WHERE YEAR(date) = 2026 AND uom IS NOT NULL
                 ORDER BY uom
             """)
             filter_data['uoms'] = [row['uom'] for row in cursor.fetchall() if row['uom']]
@@ -256,7 +256,7 @@ async def get_filter_options():
             cursor.execute("""
                 SELECT DISTINCT qualityStatus
                 FROM Inventory
-                WHERE YEAR(capturedDate) = 2026 AND qualityStatus IS NOT NULL
+                WHERE YEAR(date) = 2026 AND qualityStatus IS NOT NULL
                 ORDER BY qualityStatus
             """)
             filter_data['quality_statuses'] = [row['qualityStatus'] for row in cursor.fetchall() if row['qualityStatus']]
@@ -265,7 +265,7 @@ async def get_filter_options():
             cursor.execute("""
                 SELECT DISTINCT mheNo
                 FROM Inventory
-                WHERE YEAR(capturedDate) = 2026 AND mheNo IS NOT NULL
+                WHERE YEAR(date) = 2026 AND mheNo IS NOT NULL
                 ORDER BY mheNo
                 LIMIT 200
             """)
