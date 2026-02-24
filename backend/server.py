@@ -87,12 +87,12 @@ async def get_inventory(
 ):
     """
     Fetch inventory data from MySQL with optional filters
-    Only returns data from 2026
+    Only returns data from 2026 (using createdAt column)
     """
     try:
         connection = get_mysql_connection()
         with connection.cursor() as cursor:
-            # Base query with JOIN to MasterMachines
+            # Base query with JOIN to MasterMachines - Using createdAt for year filtering
             query = """
                 SELECT 
                     i.id,
@@ -118,7 +118,7 @@ async def get_inventory(
                     i.useBefore as use_before
                 FROM Inventory i
                 LEFT JOIN MasterMachines m ON i.machineId = m.id
-                WHERE YEAR(i.date) = 2026
+                WHERE YEAR(i.createdAt) = 2026
             """
             
             # Add filters dynamically
