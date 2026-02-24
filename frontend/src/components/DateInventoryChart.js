@@ -1,52 +1,72 @@
 import React, { useMemo } from 'react';
-import { Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 
 const DateInventoryChart = ({ filteredData }) => {
   const dateInventory = useMemo(() => {
     const dateMap = {};
+    
+    // Filter only 2026 dates and group by date and UOM
     filteredData.forEach((item) => {
-      const date = item.captured_date_ist?.split('T')[0] || 'Unknown';
+      const dateStr = item.captured_date_ist?.split('T')[0];
+      if (!dateStr || !dateStr.startsWith('2026')) return; // Only 2026 dates
+      
+      const uom = item.uom || 'Unknown';
       const qty = parseFloat(item.current_quantity) || 0;
-      dateMap[date] = (dateMap[date] || 0) + qty;
+      
+      if (!dateMap[dateStr]) {
+        dateMap[dateStr] = {};
+      }
+      dateMap[dateStr][uom] = (dateMap[dateStr][uom] || 0) + qty;
     });
+    
     const sortedDates = Object.keys(dateMap).sort();
+    const allUoms = [...new Set(filteredData.map(item => item.uom || 'Unknown'))];
+    
     return {
       labels: sortedDates,
-      values: sortedDates.map((date) => dateMap[date]),
+      uoms: allUoms,
+      data: dateMap
     };
   }, [filteredData]);
 
   const chartData = {
     labels: dateInventory.labels,
-    datasets: [
-      {
-        label: 'Inventory',
-        data: dateInventory.values,
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.4,
-        fill: true,
-      },
-    ],
+    datasets: dateInventory.uoms.map((uom, index) => ({
+      label: uom,
+      data: dateInventory.labels.map(date => dateInventory.data[date][uom] || 0),
+      backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][index % 5],
+    })),
   };
 
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
+      legend: {
+        position: 'top',
+        labels: { font: { size: 10, family: 'Work Sans' }, boxWidth: 12 },
+      },
       title: {
         display: true,
-        text: 'Date Wise Inventory',
+        text: 'Date Wise Inventory (Stacked by UOM) - 2026 Only',
         font: { size: 14, weight: 'bold', family: 'Work Sans' },
       },
     },
-    scales: { y: { beginAtZero: true } },
+    scales: {
+      x: { 
+        stacked: true,
+        ticks: { font: { size: 9 } }
+      },
+      y: { 
+        stacked: true,
+        beginAtZero: true 
+      },
+    },
   };
 
   return (
     <div style={{ height: '280px' }}>
-      <Line data={chartData} options={chartOptions} />
+      <Bar data={chartData} options={chartOptions} />
     </div>
   );
 };

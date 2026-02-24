@@ -82,7 +82,7 @@ const Dashboard = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       fetchData();
-    }, 4 * 60 * 60 * 1000); // 4 hours in milliseconds
+    }, 4 * 60 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -105,23 +105,35 @@ const Dashboard = () => {
       });
     }
 
-    // Apply other filters
-    ['item_type', 'item_code', 'machine_name', 'machine_id', 'uom', 'quality_status', 'mhe_no'].forEach((key) => {
+    // Apply other filters with case-insensitive comparison for quality_status
+    ['item_type', 'item_code', 'machine_name', 'machine_id', 'uom', 'mhe_no'].forEach((key) => {
       if (filters[key]) {
         filtered = filtered.filter((item) => item[key] === filters[key]);
       }
     });
 
+    // Special handling for quality_status - case insensitive
+    if (filters.quality_status) {
+      filtered = filtered.filter((item) => 
+        (item.quality_status || '').toLowerCase() === filters.quality_status.toLowerCase()
+      );
+    }
+
     // Apply chart click filters
     Object.keys(chartFilters).forEach((key) => {
       if (chartFilters[key]) {
-        filtered = filtered.filter((item) => {
-          if (key === 'uom') return item.uom === chartFilters[key];
-          if (key === 'quality_status') return item.quality_status === chartFilters[key];
-          if (key === 'machine_name') return item.machine_name === chartFilters[key];
-          if (key === 'item_code') return item.item_code === chartFilters[key];
-          return true;
-        });
+        if (key === 'quality_status') {
+          filtered = filtered.filter((item) => 
+            (item.quality_status || '').toLowerCase() === (chartFilters[key] || '').toLowerCase()
+          );
+        } else {
+          filtered = filtered.filter((item) => {
+            if (key === 'uom') return item.uom === chartFilters[key];
+            if (key === 'machine_name') return item.machine_name === chartFilters[key];
+            if (key === 'item_code') return item.item_code === chartFilters[key];
+            return true;
+          });
+        }
       }
     });
 
@@ -169,7 +181,7 @@ const Dashboard = () => {
     return uomMap;
   }, [filteredData]);
 
-  // Calculate quality status wise inventory
+  // Calculate quality status wise inventory (preserve original case)
   const qualityStatusInventory = useMemo(() => {
     const statusMap = {};
     filteredData.forEach((item) => {
@@ -198,7 +210,7 @@ const Dashboard = () => {
       {
         label: 'Inventory',
         data: Object.values(qualityStatusInventory),
-        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6'],
+        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6', '#ec4899'],
       },
     ],
   };
@@ -221,8 +233,24 @@ const Dashboard = () => {
         text: 'Quality Status Wise Inventory',
         font: { size: 14, weight: 'bold', family: 'Work Sans' },
       },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `${context.label}: ${context.parsed.x.toLocaleString()}`;
+          }
+        }
+      }
     },
-    scales: { x: { beginAtZero: true } },
+    scales: { 
+      x: { 
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return value.toLocaleString();
+          }
+        }
+      } 
+    },
   };
 
   const machineChartData = {
