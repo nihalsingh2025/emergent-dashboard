@@ -329,25 +329,31 @@ async def get_curing_summary(
     try:
         connection = get_curing_mysql_connection()
         with connection.cursor() as cursor:
-            # Build WHERE clause for filters
-            where_conditions = []
-            params = []
-            
-            if start_date and end_date:
-                where_conditions.append("DateTime BETWEEN %s AND %s")
-                params.extend([start_date, end_date])
-            
-            where_clause = f" WHERE {' AND '.join(where_conditions)}" if where_conditions else ""
+            # Helper function to build WHERE clauses
+            def build_where(conditions_dict):
+                conditions = []
+                params = []
+                for key, value in conditions_dict.items():
+                    if value:
+                        conditions.append(f"{key} = %s")
+                        params.append(value)
+                return (" WHERE " + " AND ".join(conditions)) if conditions else "", params
             
             # 1. Total Production
-            prod_where = ""
-            prod_params = []
+            prod_conditions = {}
+            if recipe_id:
+                prod_conditions['recipeID'] = recipe_id
+            
+            prod_where, prod_params = "", []
             if start_date and end_date:
                 prod_where = " WHERE DateTime BETWEEN %s AND %s"
                 prod_params = [start_date, end_date]
-            if recipe_id:
-                prod_where += (" WHERE" if not prod_where else " AND") + " recipeID = %s"
-                prod_params.append(recipe_id)
+                if recipe_id:
+                    prod_where += " AND recipeID = %s"
+                    prod_params.append(recipe_id)
+            elif recipe_id:
+                prod_where = " WHERE recipeID = %s"
+                prod_params = [recipe_id]
                 
             cursor.execute(f"""
                 SELECT COALESCE(SUM(Production), 0) as total_production
@@ -356,49 +362,49 @@ async def get_curing_summary(
             """, prod_params)
             total_production = cursor.fetchone()['total_production']
             
-            # 2. Scrap Rate
-            scrap_where = where_clause
-            scrap_params = params.copy()
+            # 2 & 3. Scrap Rate and Rework Rate
+            pcr_where, pcr_params = "", []
+            conditions = []
+            if start_date and end_date:
+                conditions.append("DateTime BETWEEN %s AND %s")
+                pcr_params.extend([start_date, end_date])
             if recipe_id:
-                scrap_where += (" WHERE" if not scrap_where else " AND") + " tbmrecipeID = %s"
-                scrap_params.append(recipe_id)
+                conditions.append("tbmrecipeID = %s")
+                pcr_params.append(recipe_id)
             if status:
-                scrap_where += (" WHERE" if not scrap_where else " AND") + " status_name = %s"
-                scrap_params.append(status)
+                conditions.append("status_name = %s")
+                pcr_params.append(status)
             if defect_area:
-                scrap_where += (" WHERE" if not scrap_where else " AND") + " DefectAreaName = %s"
-                scrap_params.append(defect_area)
+                conditions.append("DefectAreaName = %s")
+                pcr_params.append(defect_area)
+            
+            if conditions:
+                pcr_where = " WHERE " + " AND ".join(conditions)
                 
             cursor.execute(f"""
                 SELECT 
                     COUNT(DISTINCT CASE WHEN LOWER(status_name) = 'scrap' THEN gtbarCode END) as scrap_count,
-                    COUNT(DISTINCT gtbarCode) as total_count
-                FROM curing_pcr_visual_event_level
-                {scrap_where}
-            """, scrap_params)
-            scrap_data = cursor.fetchone()
-            scrap_rate = (scrap_data['scrap_count'] / scrap_data['total_count'] * 100) if scrap_data['total_count'] > 0 else 0
-            
-            # 3. Rework Rate
-            cursor.execute(f"""
-                SELECT 
                     COUNT(DISTINCT CASE WHEN LOWER(status_name) = 'rework' THEN gtbarCode END) as rework_count,
                     COUNT(DISTINCT gtbarCode) as total_count
                 FROM curing_pcr_visual_event_level
-                {scrap_where}
-            """, scrap_params)
-            rework_data = cursor.fetchone()
-            rework_rate = (rework_data['rework_count'] / rework_data['total_count'] * 100) if rework_data['total_count'] > 0 else 0
+                {pcr_where}
+            """, pcr_params)
+            rates_data = cursor.fetchone()
+            scrap_rate = (rates_data['scrap_count'] / rates_data['total_count'] * 100) if rates_data['total_count'] > 0 else 0
+            rework_rate = (rates_data['rework_count'] / rates_data['total_count'] * 100) if rates_data['total_count'] > 0 else 0
             
             # 4. NCM Hold
-            ncm_where = ""
-            ncm_params = []
+            ncm_where, ncm_params = "", []
+            conditions = []
             if start_date and end_date:
-                ncm_where = " WHERE hold_dt BETWEEN %s AND %s"
-                ncm_params = [start_date, end_date]
+                conditions.append("hold_dt BETWEEN %s AND %s")
+                ncm_params.extend([start_date, end_date])
             if recipe_id:
-                ncm_where += (" WHERE" if not ncm_where else " AND") + " Recipe = %s"
+                conditions.append("Recipe = %s")
                 ncm_params.append(recipe_id)
+            
+            if conditions:
+                ncm_where = " WHERE " + " AND ".join(conditions)
                 
             cursor.execute(f"""
                 SELECT COUNT(DISTINCT Barcode) as ncm_hold_count
@@ -408,44 +414,56 @@ async def get_curing_summary(
             ncm_hold = cursor.fetchone()['ncm_hold_count']
             
             # 5. Avg Cycle Time
-            cycle_where = ""
-            cycle_params = []
+            cycle_where, cycle_params = "", []
+            conditions = ["Cycle_Time_Minutes <= 40.1"]
             if start_date and end_date:
-                cycle_where = " WHERE Previous_Cycle_Time BETWEEN %s AND %s"
-                cycle_params = [start_date, end_date]
+                conditions.append("Previous_Cycle_Time BETWEEN %s AND %s")
+                cycle_params.extend([start_date, end_date])
             if recipe_id:
-                cycle_where += (" WHERE" if not cycle_where else " AND") + " Recipe_ID = %s"
+                conditions.append("Recipe_ID = %s")
                 cycle_params.append(recipe_id)
+            
+            cycle_where = " WHERE " + " AND ".join(conditions)
                 
             cursor.execute(f"""
                 SELECT AVG(Cycle_Time_Minutes) as avg_cycle_time
                 FROM curing_cycle_times_all
-                {cycle_where} AND Cycle_Time_Minutes <= 40.1
+                {cycle_where}
             """, cycle_params)
             result = cursor.fetchone()
             avg_cycle_time = result['avg_cycle_time'] if result['avg_cycle_time'] else 0
             
             # 6. Avg Changeover Time
-            changeover_where = ""
-            changeover_params = []
+            changeover_where, changeover_params = "", []
+            conditions = ["Gap_Minutes <= 60"]
             if start_date and end_date:
-                changeover_where = " WHERE Previous_Cycle_Time BETWEEN %s AND %s"
-                changeover_params = [start_date, end_date]
+                conditions.append("Previous_Cycle_Time BETWEEN %s AND %s")
+                changeover_params.extend([start_date, end_date])
+            
+            changeover_where = " WHERE " + " AND ".join(conditions)
                 
             cursor.execute(f"""
                 SELECT AVG(Gap_Minutes) as avg_changeover_time
                 FROM curing_changeover_real
-                {changeover_where} AND Gap_Minutes <= 60
+                {changeover_where}
             """, changeover_params)
             result = cursor.fetchone()
             avg_changeover_time = result['avg_changeover_time'] if result['avg_changeover_time'] else 0
             
             # 7. Total Changeover
+            total_changeover_where, total_changeover_params = "", []
+            conditions = ["Recipe_Changed = 1"]
+            if start_date and end_date:
+                conditions.append("Previous_Cycle_Time BETWEEN %s AND %s")
+                total_changeover_params.extend([start_date, end_date])
+            
+            total_changeover_where = " WHERE " + " AND ".join(conditions)
+            
             cursor.execute(f"""
                 SELECT COUNT(*) as total_changeover
                 FROM curing_changeover_real
-                {changeover_where} AND Recipe_Changed = 1
-            """, changeover_params)
+                {total_changeover_where}
+            """, total_changeover_params)
             total_changeover = cursor.fetchone()['total_changeover']
             
             return {
