@@ -13,6 +13,21 @@ import json
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Curing database connection configuration
+CURING_MYSQL_CONFIG = {
+    'host': '35.208.174.2',
+    'user': 'root',
+    'password': 'Dev112233',
+    'database': 'kpi_table',
+    'cursorclass': pymysql.cursors.DictCursor,
+    'charset': 'utf8mb4'
+}
+
+def get_curing_mysql_connection():
+    """Create and return Curing MySQL connection"""
+    return pymysql.connect(**CURING_MYSQL_CONFIG)
+
+
 # MySQL connection configuration
 MYSQL_CONFIG = {
     'host': '35.208.174.2',
