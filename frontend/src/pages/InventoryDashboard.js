@@ -411,4 +411,4 @@ const InventoryDashboard = ({ onLogout }) => {
   );
 };
 
-export default Dashboard;
+export default InventoryDashboard;
