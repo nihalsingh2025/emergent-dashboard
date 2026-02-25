@@ -311,6 +311,8 @@ async def get_filter_options():
         logger.error(f"Error fetching filter options: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
+        if 'connection' in locals():
+            connection.close()
 
 
 # ===== CURING DASHBOARD ENDPOINTS =====
