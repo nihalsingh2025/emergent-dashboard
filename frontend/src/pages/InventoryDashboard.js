@@ -339,9 +339,32 @@ const InventoryDashboard = ({ onLogout }) => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-[#FFD700] py-3 px-6 shadow-md">
-        <h1 className="text-2xl font-bold text-black text-center">
-          JK Tyre BTP Inventory Dashboard
-        </h1>
+        <div className="max-w-[1800px] mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="bg-black rounded-full w-10 h-10 flex items-center justify-center">
+              <span className="text-lg font-bold text-[#FFD700]">JK</span>
+            </div>
+            <h1 className="text-xl font-bold text-black">JK Tyre BTP Inventory Dashboard</h1>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              onClick={() => navigate('/dashboards')}
+              variant="outline"
+              size="sm"
+              className="bg-white hover:bg-gray-100 h-8 text-xs"
+            >
+              ← Back
+            </Button>
+            <Button
+              onClick={() => { onLogout(); navigate('/'); }}
+              variant="outline"
+              size="sm"
+              className="bg-white hover:bg-gray-100 h-8 text-xs"
+            >
+              Logout
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
