@@ -710,14 +710,17 @@ async def get_changeover_by_press(
         with connection.cursor() as cursor:
             where_clause = ""
             params = []
+            conditions = ["Recipe_Changed = 1"]
             if start_date and end_date:
-                where_clause = " WHERE Previous_Cycle_Time BETWEEN %s AND %s"
+                conditions.append("Previous_Cycle_Time BETWEEN %s AND %s")
                 params = [start_date, end_date]
+            
+            where_clause = " WHERE " + " AND ".join(conditions)
                 
             cursor.execute(f"""
                 SELECT Press_ID, SUM(Recipe_Changed) as changeover_count
                 FROM curing_changeover_real
-                {where_clause} AND Recipe_Changed = 1
+                {where_clause}
                 GROUP BY Press_ID
                 ORDER BY changeover_count DESC
             """, params)
