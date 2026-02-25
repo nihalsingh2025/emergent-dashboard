@@ -548,6 +548,304 @@ app.add_middleware(
 )
 
 # Configure logging
+
+
+@api_router.get("/curing/production-by-shift")
+async def get_production_by_shift(
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    recipe_id: Optional[str] = Query(None)
+):
+    """Get production grouped by shift (calculated from hour)"""
+    try:
+        connection = get_curing_mysql_connection()
+        with connection.cursor() as cursor:
+            where_clause = ""
+            params = []
+            if start_date and end_date:
+                where_clause = " WHERE DateTime BETWEEN %s AND %s"
+                params = [start_date, end_date]
+            if recipe_id:
+                where_clause += (" WHERE" if not where_clause else " AND") + " recipeID = %s"
+                params.append(recipe_id)
+                
+            cursor.execute(f"""
+                SELECT 
+                    CASE 
+                        WHEN Hour >= 7 AND Hour < 15 THEN 'A'
+                        WHEN Hour >= 15 AND Hour < 23 THEN 'B'
+                        ELSE 'C'
+                    END as shift,
+                    SUM(Production) as total_production
+                FROM curing_prod_agg_year_month_day_hour
+                {where_clause}
+                GROUP BY shift
+                ORDER BY shift
+            """, params)
+            
+            return cursor.fetchall()
+    except Exception as e:
+        logger.error(f"Error fetching production by shift: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+@api_router.get("/curing/daily-production")
+async def get_daily_production(
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    recipe_id: Optional[str] = Query(None)
+):
+    """Get daily production"""
+    try:
+        connection = get_curing_mysql_connection()
+        with connection.cursor() as cursor:
+            where_clause = ""
+            params = []
+            if start_date and end_date:
+                where_clause = " WHERE DateTime BETWEEN %s AND %s"
+                params = [start_date, end_date]
+            if recipe_id:
+                where_clause += (" WHERE" if not where_clause else " AND") + " recipeID = %s"
+                params.append(recipe_id)
+                
+            cursor.execute(f"""
+                SELECT 
+                    DATE(DateTime) as date,
+                    SUM(Production) as total_production
+                FROM curing_prod_agg_year_month_day_hour
+                {where_clause}
+                GROUP BY DATE(DateTime)
+                ORDER BY DATE(DateTime)
+            """, params)
+            
+            results = cursor.fetchall()
+            # Convert date to string
+            for row in results:
+                if row['date']:
+                    row['date'] = str(row['date'])
+            return results
+    except Exception as e:
+        logger.error(f"Error fetching daily production: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+@api_router.get("/curing/quality-by-shift")
+async def get_quality_by_shift(
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    defect_area: Optional[str] = Query(None)
+):
+    """Get quality metrics grouped by shift and status"""
+    try:
+        connection = get_curing_mysql_connection()
+        with connection.cursor() as cursor:
+            where_clause = ""
+            params = []
+            if start_date and end_date:
+                where_clause = " WHERE DateTime BETWEEN %s AND %s"
+                params = [start_date, end_date]
+            if status:
+                where_clause += (" WHERE" if not where_clause else " AND") + " status_name = %s"
+                params.append(status)
+            if defect_area:
+                where_clause += (" WHERE" if not where_clause else " AND") + " DefectAreaName = %s"
+                params.append(defect_area)
+                
+            cursor.execute(f"""
+                SELECT 
+                    CASE 
+                        WHEN HOUR(DateTime) >= 7 AND HOUR(DateTime) < 15 THEN 'A'
+                        WHEN HOUR(DateTime) >= 15 AND HOUR(DateTime) < 23 THEN 'B'
+                        ELSE 'C'
+                    END as shift,
+                    status_name,
+                    COUNT(DISTINCT gtbarCode) as count
+                FROM curing_pcr_visual_event_level
+                {where_clause}
+                GROUP BY shift, status_name
+                ORDER BY shift, status_name
+            """, params)
+            
+            return cursor.fetchall()
+    except Exception as e:
+        logger.error(f"Error fetching quality by shift: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+@api_router.get("/curing/changeover-by-press")
+async def get_changeover_by_press(
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None)
+):
+    """Get changeover count by press"""
+    try:
+        connection = get_curing_mysql_connection()
+        with connection.cursor() as cursor:
+            where_clause = ""
+            params = []
+            if start_date and end_date:
+                where_clause = " WHERE Previous_Cycle_Time BETWEEN %s AND %s"
+                params = [start_date, end_date]
+                
+            cursor.execute(f"""
+                SELECT Press_ID, SUM(Recipe_Changed) as changeover_count
+                FROM curing_changeover_real
+                {where_clause} AND Recipe_Changed = 1
+                GROUP BY Press_ID
+                ORDER BY changeover_count DESC
+            """, params)
+            
+            return cursor.fetchall()
+    except Exception as e:
+        logger.error(f"Error fetching changeover by press: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+@api_router.get("/curing/production-table")
+async def get_production_table(
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    recipe_id: Optional[str] = Query(None)
+):
+    """Get production table data"""
+    try:
+        connection = get_curing_mysql_connection()
+        with connection.cursor() as cursor:
+            where_clause = ""
+            params = []
+            if start_date and end_date:
+                where_clause = " WHERE DateTime BETWEEN %s AND %s"
+                params = [start_date, end_date]
+            if recipe_id:
+                where_clause += (" WHERE" if not where_clause else " AND") + " recipeID = %s"
+                params.append(recipe_id)
+                
+            cursor.execute(f"""
+                SELECT recipeID, wcID, mouldID, SUM(Production) as total_production
+                FROM curing_prod_agg_year_month_day_hour
+                {where_clause}
+                GROUP BY recipeID, wcID, mouldID
+                ORDER BY recipeID, wcID, mouldID
+                LIMIT 500
+            """, params)
+            
+            return cursor.fetchall()
+    except Exception as e:
+        logger.error(f"Error fetching production table: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+@api_router.get("/curing/quality-data-table")
+async def get_quality_data_table(
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    defect_area: Optional[str] = Query(None)
+):
+    """Get quality data table"""
+    try:
+        connection = get_curing_mysql_connection()
+        with connection.cursor() as cursor:
+            where_clause = ""
+            params = []
+            if start_date and end_date:
+                where_clause = " WHERE DateTime BETWEEN %s AND %s"
+                params = [start_date, end_date]
+            if status:
+                where_clause += (" WHERE" if not where_clause else " AND") + " status_name = %s"
+                params.append(status)
+            if defect_area:
+                where_clause += (" WHERE" if not where_clause else " AND") + " DefectAreaName = %s"
+                params.append(defect_area)
+                
+            cursor.execute(f"""
+                SELECT 
+                    tbmrecipeID,
+                    DefectAreaName,
+                    DefectNameText,
+                    status_name,
+                    COUNT(*) as count
+                FROM curing_pcr_visual_event_level
+                {where_clause}
+                GROUP BY tbmrecipeID, DefectAreaName, DefectNameText, status_name
+                ORDER BY count DESC
+                LIMIT 500
+            """, params)
+            
+            return cursor.fetchall()
+    except Exception as e:
+        logger.error(f"Error fetching quality data table: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+@api_router.get("/curing/filter-options")
+async def get_curing_filter_options():
+    """Get filter options for curing dashboard"""
+    try:
+        connection = get_curing_mysql_connection()
+        with connection.cursor() as cursor:
+            filter_data = {}
+            
+            # Recipe IDs
+            cursor.execute("""
+                SELECT DISTINCT recipeID
+                FROM curing_prod_agg_year_month_day_hour
+                WHERE recipeID IS NOT NULL
+                ORDER BY recipeID
+                LIMIT 200
+            """)
+            filter_data['recipe_ids'] = [row['recipeID'] for row in cursor.fetchall() if row['recipeID']]
+            
+            # Status names
+            cursor.execute("""
+                SELECT DISTINCT status_name
+                FROM curing_pcr_visual_event_level
+                WHERE status_name IS NOT NULL
+                ORDER BY status_name
+            """)
+            filter_data['statuses'] = [row['status_name'] for row in cursor.fetchall() if row['status_name']]
+            
+            # Defect areas
+            cursor.execute("""
+                SELECT DISTINCT DefectAreaName
+                FROM curing_pcr_visual_event_level
+                WHERE DefectAreaName IS NOT NULL
+                ORDER BY DefectAreaName
+            """)
+            filter_data['defect_areas'] = [row['DefectAreaName'] for row in cursor.fetchall() if row['DefectAreaName']]
+            
+            # Date range
+            cursor.execute("""
+                SELECT MIN(DateTime) as min_date, MAX(DateTime) as max_date
+                FROM curing_prod_agg_year_month_day_hour
+            """)
+            date_range = cursor.fetchone()
+            filter_data['date_range'] = {
+                'min': str(date_range['min_date']) if date_range['min_date'] else None,
+                'max': str(date_range['max_date']) if date_range['max_date'] else None
+            }
+            
+            return filter_data
+    except Exception as e:
+        logger.error(f"Error fetching curing filter options: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
