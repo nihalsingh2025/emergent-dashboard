@@ -214,7 +214,10 @@ async def get_inventory(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
 @api_router.get("/filter-options", response_model=FilterOptions)
 async def get_filter_options():
@@ -312,7 +315,10 @@ async def get_filter_options():
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
 
 # ===== CURING DASHBOARD ENDPOINTS =====
@@ -480,7 +486,10 @@ async def get_curing_summary(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
 @api_router.get("/curing/production-by-press")
 async def get_production_by_press(
@@ -515,7 +524,10 @@ async def get_production_by_press(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
 @api_router.get("/curing/production-by-recipe")
 async def get_production_by_recipe(
@@ -551,7 +563,10 @@ async def get_production_by_recipe(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
         if 'connection' in locals():
             connection.close()
@@ -609,7 +624,10 @@ async def get_production_by_shift(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
 @api_router.get("/curing/daily-production")
 async def get_daily_production(
@@ -651,7 +669,10 @@ async def get_daily_production(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
 @api_router.get("/curing/quality-by-shift")
 async def get_quality_by_shift(
@@ -697,7 +718,10 @@ async def get_quality_by_shift(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
 @api_router.get("/curing/changeover-by-press")
 async def get_changeover_by_press(
@@ -731,7 +755,10 @@ async def get_changeover_by_press(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
 @api_router.get("/curing/production-table")
 async def get_production_table(
@@ -767,7 +794,10 @@ async def get_production_table(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
 @api_router.get("/curing/quality-data-table")
 async def get_quality_data_table(
@@ -812,7 +842,10 @@ async def get_quality_data_table(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
 @api_router.get("/curing/filter-options")
 async def get_curing_filter_options():
@@ -867,7 +900,10 @@ async def get_curing_filter_options():
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'connection' in locals():
-            connection.close()
+            try:
+                connection.close()
+            except:
+                pass
 
 logging.basicConfig(
     level=logging.INFO,
