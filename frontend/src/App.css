@@ -13,6 +13,18 @@ body {
   min-height: 100vh;
 }
 
+/* Hide Emergent watermark */
+[class*="watermark"],
+[class*="Watermark"],
+[id*="watermark"],
+[id*="Watermark"],
+a[href*="emergent"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
